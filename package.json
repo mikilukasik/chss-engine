@@ -1,0 +1,19 @@
+{
+  "name": "chss-engine",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/mikilukasik/chss-engine.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mikilukasik/chss-engine/issues"
+  },
+  "homepage": "https://github.com/mikilukasik/chss-engine#readme"
+}
