@@ -15,7 +15,7 @@ var objectToString = function (obj) {
 };
 
 ///////////////////evalgame////////////////
-var evalFuncs = {
+export const evalFuncs = {
   getPieceValues: function (dbTable) {
 
     var result = {
@@ -903,7 +903,7 @@ function captured(table, color) {
   return false;
 }
 
-function moveIt(moveCoords, intable, dontProtect, hitValue) {
+export function moveIt(moveCoords, intable, dontProtect, hitValue) {
 
   if (hitValue === undefined) var hitValue = [0];
   var thistable = [];
@@ -1526,7 +1526,7 @@ function clone(obj) {
 
 ////////////////////http://stackoverflow.com/questions/728360/most-elegant-way-to-clone-a-javascript-object end
 
-var MoveTaskN = function (dbTable, mod) {
+export const MoveTaskN = function (dbTable, mod) {
   this.id = Math.random();
 
   var shouldIDraw = evalFuncs.shouldIDraw(dbTable)
@@ -1747,7 +1747,7 @@ function solveSmallDeepeningTask(sdt, resolverArray) {
 
 }
 
-function solveDeepeningTask(deepeningTask, isSdt) { //designed to solve the whole deepening task on one thread
+export function solveDeepeningTask(deepeningTask, isSdt) { //designed to solve the whole deepening task on one thread
   //will return number of smallTasks solved for testing??!!!!!!!!!!!!!!!
   //var taskValue = deepeningTask.
 
@@ -1862,7 +1862,7 @@ function mtProcessDeepSplitMoves(data, thinker, mt, modConst, looped) {
   return newData
 }
 
-function oneDeeper(deepeningTask) { //only takes original first level deepeningtasks??
+export function oneDeeper(deepeningTask) { //only takes original first level deepeningtasks??
 
   var resolverArray = []
   var smallDeepeningTask = deepeningTask.smallDeepeningTasks.pop()
@@ -1896,21 +1896,21 @@ export function singleThreadAi(tempDbTable, depth, cb, mod) {
   var tempMoves = new SplitMove(dbTable).movesToSend
 
   //////////from mainworker
-  tempMoves.forEach(function (splitMove) {
+  // tempMoves.forEach(function (splitMove) {
 
-    splitMove.progress = {
+  //   splitMove.progress = {
 
-      moveCoords: splitMove.moveCoords,
-      moveIndex: splitMove.moveIndex,
+  //     moveCoords: splitMove.moveCoords,
+  //     moveIndex: splitMove.moveIndex,
 
-      done: false,
-      result: {},
+  //     done: false,
+  //     result: {},
 
-      expected: undefined,
+  //     expected: undefined,
 
-    }
+  //   }
 
-  })
+  // })
 
   var result = []
 
@@ -2006,7 +2006,7 @@ export function singleThreadAi(tempDbTable, depth, cb, mod) {
 
 }
 
-function resolveDepth(depth, resolverArray) {
+export function resolveDepth(depth, resolverArray) {
 
   if (resolverArray[depth].length > 0) {
     var raDm1 = resolverArray[depth - 1];
@@ -2109,7 +2109,7 @@ var MoveToSend = function (moveCoord, index, dbTableWithMoveTask, splitMoveId) {
 
 
 
-var SplitMove = function (dbTableWithMoveTask) {
+export const SplitMove = function (dbTableWithMoveTask) {
 
   //**console.log(JSON.stringify(dbTableWithMoveTask.moveTask))
 
@@ -2143,8 +2143,25 @@ var SplitMove = function (dbTableWithMoveTask) {
 
   this.pendingMoveCount = dbTableWithMoveTask.moveTask.moveCoords.length
 
+
+  this.movesToSend.forEach(function (splitMove) {
+
+    splitMove.progress = {
+
+      moveCoords: splitMove.moveCoords,
+      moveIndex: splitMove.moveIndex,
+
+      done: false,
+      result: {},
+
+      expected: undefined,
+
+    }
+
+  })
+
 }
-var DeepeningTask = function (smallMoveTask) { //keep this fast, designed for main thread and mainWorker ???not sure..     //smallMoveTask is a smallMoveTask, to be deepend further
+export const DeepeningTask = function (smallMoveTask) { //keep this fast, designed for main thread and mainWorker ???not sure..     //smallMoveTask is a smallMoveTask, to be deepend further
 
   this.shouldIDraw = smallMoveTask.sharedData.shouldIDraw
 

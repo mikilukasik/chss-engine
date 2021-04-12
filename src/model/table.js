@@ -1,4 +1,4 @@
-import { addMovesToTable } from 'chss-engine/src/engine/engine';
+import { addMovesToTable } from '../engine/engine';
 
 export const getInitialTable = () => {
   const table = [];
