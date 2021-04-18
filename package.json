@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/mikilukasik/chss-engine/issues"
   },
-  "homepage": "https://github.com/mikilukasik/chss-engine#readme"
+  "homepage": "https://github.com/mikilukasik/chss-engine#readme",
+  "dependencies": {
+    "uuid-random": "^1.3.2"
+  }
 }

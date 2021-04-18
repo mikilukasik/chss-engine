@@ -1,5 +1,5 @@
 import { getInitialTable } from "./table";
-
+import uuid from 'uuid-random';
 export class GameModel {
   constructor() {
     this.moveCount = 0
@@ -8,7 +8,7 @@ export class GameModel {
     this.desiredDepth = 0	//will set after creating, at each move step
     this.returnedMoves = []
 
-    // this._id = _id,
+    this._id = uuid(),
     //   this.wName = wName,
     //   this.bName = bName,
 
