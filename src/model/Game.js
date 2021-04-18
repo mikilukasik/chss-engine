@@ -8,7 +8,7 @@ export class GameModel {
     this.desiredDepth = 0	//will set after creating, at each move step
     this.returnedMoves = []
 
-    this.id = uuid(),
+    this.id = uuid();
     //   this.wName = wName,
     //   this.bName = bName,
 
