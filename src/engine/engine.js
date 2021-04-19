@@ -802,7 +802,8 @@ function getPushString(table, moveCoords) {
 
   }
 
-  return whatM[0].toString() + whatM[1] + coordsToMoveString(...moveCoords) + whatsHit;
+  // return whatM[0].toString() + whatM[1] + coordsToMoveString(...moveCoords) + whatsHit;
+  return whatM[0].toString() + whatM[1] + moveCoords.join('') + whatsHit;
 
 }
 
