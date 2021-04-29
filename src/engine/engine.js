@@ -751,7 +751,7 @@ export function getHitScores(origTable, wNext) {
     cellLoop:
     for (var lookJ = 0; lookJ < 8; lookJ += 1) { //look through the table
       if (origTable[lookI][lookJ][0] === 0 || !origTable[lookI][lookJ][2]) continue cellLoop; // empty cell or not attacked cell
-      
+
       if (origTable[lookI][lookJ][0] !== c) {
         // opponent's piece
         let thisCellValue = 0;
@@ -784,9 +784,9 @@ export function getHitScores(origTable, wNext) {
           continue cellLoop;
         }
         // weakest attacker will be hit
-        
+
         thisCellValue -= weakestAttacker; // deduct weakest attacker
-        
+
         if (!hasMoreAttackers) { // no more attackers
           if (thisCellValue > 0) totalValue += thisCellValue; // add cellvalue if worth to hit
           continue cellLoop;
@@ -805,7 +805,7 @@ export function getHitScores(origTable, wNext) {
             continue cellLoop;
           }
           // weakest protector will be hit
-      
+
           thisCellValue += weakestProtector; // add weakest protector value
 
           // while (true) {
@@ -829,7 +829,7 @@ export function getHitScores(origTable, wNext) {
           // weakest attacker will be hit
 
           thisCellValue -= weakestAttacker;
-  
+
           if (!hasMoreAttackers) { // no more attackers
             if (thisCellValue > 0) totalValue += thisCellValue;
             continue cellLoop;
@@ -857,7 +857,6 @@ function solveSmallDeepeningTask(sdt, resolverArray) {
     if (captured(sdt.table, newWNext)) {
       //invalid move, sakkban maradt
 
-
       // this below is BS, someone maybe won the game here?
       result = [new SmallDeepeningTask(sdt.table, newWNext, sdt.depth + 1,
         sdt.moveTree, sdt.desiredDepth, 100,
@@ -871,88 +870,85 @@ function solveSmallDeepeningTask(sdt, resolverArray) {
   //get hitvalue for each move, keep best ones only
   //end of tree check if we got it wrong and go back if treevalue gets less!!!!!!!!!!!!!!!! // TODO: what did i mean there?
   if (sdt.trItm) { //we solved all moves for a table, time to go backwards
-
     //do some work in resolverArray		
     //then clear that array
+    resolveDepth(sdt.depth, resolverArray);
+    return result;
+  }
+  if (sdt.depth > sdt.desiredDepth) { //depth +1
 
-    resolveDepth(sdt.depth, resolverArray)
+    resolverArray[sdt.depth][resolverArray[sdt.depth].length] = new ResolverItem(sdt.score,
+      sdt.moveTree, sdt.wPlayer); //this will fill in and then gets reduced to best movevalue only
+
   } else {
-    if (sdt.depth > sdt.desiredDepth) { //depth +1
+    var isNegative = (sdt.depth & 1)
+    if (sdt.depth === sdt.desiredDepth) {
+      //////depth reached, eval table
 
-      resolverArray[sdt.depth][resolverArray[sdt.depth].length] = new ResolverItem(sdt.score,
-        sdt.moveTree, sdt.wPlayer); //this will fill in and then gets reduced to best movevalue only
+      const newScore = isNegative
+        ? sdt.score - getHitScores(sdt.table, sdt.wNext)
+        : sdt.score + getHitScores(sdt.table, sdt.wNext);
 
+      result[result.length] = new SmallDeepeningTask(
+        [], //no table
+        newWNext,
+        sdt.depth + 1,
+        sdt.moveTree,
+        sdt.desiredDepth,
+        newScore, //sdt.score + thisValue
+        sdt.wPlayer,
+        false,
+        sdt.gameNum,
+        // sdt.mod,
+        sdt.shouldIDraw
+      )
     } else {
-      var isNegative = (sdt.depth & 1)
-      if (sdt.depth === sdt.desiredDepth) {
-        //////depth reached, eval table
+      //depth not solved, lets solve it further
 
-        const newScore = isNegative
-          ? sdt.score - getHitScores(sdt.table, sdt.wNext)
-          : sdt.score + getHitScores(sdt.table, sdt.wNext);
-        
+      var possibleMoves = []
+      //below returns a copied table, should opt out for speed!!!!!!!
+      addMovesToTable(sdt.table, sdt.wNext, true, possibleMoves) //this puts moves in strings, should keep it fastest possible
+
+      //true to 				//it will not remove invalid moves to keep fast 
+      //keep illegal			//we will remove them later when backward processing the tree
+
+      //here we have possiblemoves filled in with good, bad and illegal moves
+
+      for (var i = possibleMoves.length - 1; i >= 0; i -= 1) {
+        var moveCoords = possibleMoves[i]
+        var movedTable = []
+        movedTable = fastMove(moveCoords, sdt.table, true) //speed! put this if out of here, makeamove only false at the last run
+
+
+        var whatGetsHit = sdt.table[moveCoords[2]][moveCoords[3]];
+        var thisValue = whatGetsHit[1] * 100 //piece value, should += 1 when en-pass
+
+        var valueToSave
+
+        if (isNegative) { //does this work???!!!!!!!!!!!
+          valueToSave = sdt.score - thisValue
+        } else {
+          valueToSave = sdt.score + thisValue
+        }
+        var newMoveTree = sdt.moveTree.concat([moveCoords, valueToSave]);
         result[result.length] = new SmallDeepeningTask(
-          [], //no table
+          movedTable,
           newWNext,
           sdt.depth + 1,
-          sdt.moveTree,
+          newMoveTree,
           sdt.desiredDepth,
-          newScore, //sdt.score + thisValue
+          valueToSave, //sdt.score + thisValue
           sdt.wPlayer,
           false,
           sdt.gameNum,
-          // sdt.mod,
+          sdt.mod,
           sdt.shouldIDraw
         )
-      } else {
-        //depth not solved, lets solve it further
+      } //  )    //end of for each move
 
-        var possibleMoves = []
-        //below returns a copied table, should opt out for speed!!!!!!!
-        addMovesToTable(sdt.table, sdt.wNext, true, possibleMoves) //this puts moves in strings, should keep it fastest possible
-
-        //true to 				//it will not remove invalid moves to keep fast 
-        //keep illegal			//we will remove them later when backward processing the tree
-
-        //here we have possiblemoves filled in with good, bad and illegal moves
-
-        for (var i = possibleMoves.length - 1; i >= 0; i -= 1) {
-          var moveCoords = possibleMoves[i]
-          var movedTable = []
-          movedTable = fastMove(moveCoords, sdt.table, true) //speed! put this if out of here, makeamove only false at the last run
-
-
-          var whatGetsHit = sdt.table[moveCoords[2]][moveCoords[3]];
-          var thisValue = whatGetsHit[1] * 100 //piece value, should += 1 when en-pass
-
-          var valueToSave
-
-          if (isNegative) { //does this work???!!!!!!!!!!!
-            valueToSave = sdt.score - thisValue
-          } else {
-            valueToSave = sdt.score + thisValue
-          }
-          var newMoveTree = sdt.moveTree.concat([moveCoords, valueToSave]);
-          result[result.length] = new SmallDeepeningTask(
-            movedTable,
-            newWNext,
-            sdt.depth + 1,
-            newMoveTree,
-            sdt.desiredDepth,
-            valueToSave, //sdt.score + thisValue
-            sdt.wPlayer,
-            false,
-            sdt.gameNum,
-            sdt.mod,
-            sdt.shouldIDraw
-          )
-        } //  )    //end of for each move
-
-      }
-      result[result.length] = new TriggerItem(sdt.depth + 1, sdt.moveTree,
-        sdt.wPlayer)
-      //this will trigger move calc when processing array (will be placed before each set of smalltasks)
     }
+    result[result.length] = new TriggerItem(sdt.depth + 1, sdt.moveTree, sdt.wPlayer)
+    //this will trigger move calc when processing array (will be placed before each set of smalltasks)
   }
   return result
 
@@ -1117,7 +1113,7 @@ export const DeepeningTask = function (smallMoveTask) { //keep this fast, design
   this.startingAllPastTables = smallMoveTask.sharedData.allPast
   this.thisTaskTable = moveIt(this.moveStr, this.startingTable, true) //this is the first and should be only time calculating this!!!!!
   //takes time
-  this.firstDepthValue = this.startingTable[smallMoveTask.moveCoords[2]][smallMoveTask.moveCoords[3]][1]     *100         //smallMoveTask.firstDepthValue
+  this.firstDepthValue = this.startingTable[smallMoveTask.moveCoords[2]][smallMoveTask.moveCoords[3]][1] * 100         //smallMoveTask.firstDepthValue
 
   this.desiredDepth = smallMoveTask.sharedData.desiredDepth //we will deepen until depth reaches this number
 
