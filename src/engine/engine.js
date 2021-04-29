@@ -1,3 +1,126 @@
+// needed for service
+var MoveToSend = function (moveCoord, index, dbTableWithMoveTask, splitMoveId) {
+
+  var moveTask = dbTableWithMoveTask.moveTask
+
+  this.shouldIDraw = moveTask.shouldIDraw
+
+  this.mod = moveTask.mod
+
+  this.moveIndex = index
+
+  this.moveCoords = moveCoord //one move only
+
+  this.sharedData = moveTask.sharedData
+
+  this.sharedData.origTable = dbTableWithMoveTask.table
+
+  this.sharedData.gameNum = dbTableWithMoveTask._id
+
+  this.sharedData.desiredDepth = moveTask.sharedData.desiredDepth
+
+  this.sharedData.splitMoveID = splitMoveId
+
+  this.timer = {}
+
+  this.history = []
+
+}
+
+export const SplitMove = function (dbTableWithMoveTask) {
+
+  //**console.log(JSON.stringify(dbTableWithMoveTask.moveTask))
+
+  this.shouldIDraw = dbTableWithMoveTask.moveTask.shouldIDraw
+
+  this.started = new Date()
+
+  this.splitMoveIndex = undefined
+
+  this.splitMoveID = Math.random() * Math.random()
+
+  var movesToSend = []
+
+  dbTableWithMoveTask.moveTask.moveCoords.forEach((moveCoord, index) => {
+
+    movesToSend.push(new MoveToSend(moveCoord, index, dbTableWithMoveTask, this.splitMoveID))
+
+  })
+
+  this.movesToSend = movesToSend //this will get empty as we send the moves out for processing
+
+  this.moves = movesToSend.slice() //this should stay full
+
+  this.thinkers = [] //this will get filled with the clients working on this splitmove
+
+  this.gameNum = dbTableWithMoveTask._id
+
+  this.origTable = dbTableWithMoveTask.table
+
+  this.origMoveTask = dbTableWithMoveTask.moveTask
+
+  this.pendingMoveCount = dbTableWithMoveTask.moveTask.moveCoords.length
+
+
+  this.movesToSend.forEach(function (splitMove) {
+
+    splitMove.progress = {
+
+      moveCoords: splitMove.moveCoords,
+      moveIndex: splitMove.moveIndex,
+
+      done: false,
+      result: {},
+
+      expected: undefined,
+
+    }
+
+  })
+
+}
+
+export const MoveTaskN = function (dbTable, mod) {
+  this.id = Math.random();
+
+  var shouldIDraw = evalFuncs.shouldIDraw(dbTable)
+  this.shouldIDraw = shouldIDraw
+
+  // console.log({shouldIDraw})
+
+  if (mod) this.mod = mod
+
+  this.sharedData = {
+
+    shouldIDraw: shouldIDraw,
+
+    origWNext: dbTable.wNext,
+
+    desiredDepth: dbTable.desiredDepth,
+    oppKingPos: whereIsTheKing(dbTable.table, !dbTable.wNext),
+    origProtect: protectTable(dbTable.table, dbTable.wNext),
+    origData: getTableData(dbTable.table, dbTable.wNext),
+    // origDeepDatatt: getHitScores(dbTable.table, true, true, dbTable.wNext,
+    //   mod),
+    // origDeepDatatf: getHitScores(dbTable.table, true, false, dbTable.wNext,
+    //   mod),
+    // origDeepDataft: getHitScores(dbTable.table, false, true, dbTable.wNext,
+    //   mod),
+    // origDeepDataff: getHitScores(dbTable.table, false, false, dbTable.wNext,
+    //   mod),
+  }
+
+  this.moveCoords = getAllMoves(dbTable.table, dbTable.wNext, false, 0, true)
+
+  var dontLoop = false
+  if (this.sharedData.origData[0] > 1) {
+    dontLoop = true
+  }
+
+  this.sharedData.dontLoop = dontLoop
+
+};
+
 export function addMovesToTable(originalTable, whiteNext, dontClearInvalid, returnMoveCoords) {
   var myCol = whiteNext ? 2 : 1;
   for (var i = 0; i < 8; i += 1) {
@@ -13,6 +136,330 @@ export function addMovesToTable(originalTable, whiteNext, dontClearInvalid, retu
   return originalTable;
 }
 
+export const evalFuncs = {
+  getPieceValues: function (dbTable) {
+
+    var result = {
+      wVal: 0,
+      bVal: 0
+    };
+
+    var table = dbTable.table;
+
+    table.forEach(function (x) {
+      x.forEach(function (y) {
+        switch (y[0]) {
+          case 1:
+
+            result.bVal += y[1];
+
+            break;
+
+          case 2:
+
+            result.wVal += y[1];
+
+            break;
+
+          default:
+            break;
+        }
+      });
+    });
+
+    return result;
+
+  },
+
+  shouldIDraw: function (dbTable) {
+    var pieceVals = this.getPieceValues(dbTable);
+
+    if (dbTable.wNext) {
+      if (pieceVals.wVal < pieceVals.bVal) return true;
+    } else {
+      if (pieceVals.wVal > pieceVals.bVal) return true;
+    }
+
+    return false;
+  },
+
+  checkIfLooped: function (newTable, allPastTables) {
+
+    var seenCount = 0;
+    var thisState = createState(newTable);
+
+    allPastTables.forEach(function (pastTable) {
+      if (pastTable === thisState) seenCount += 1;
+    });
+
+    return seenCount;
+
+  },
+};
+
+function whereIsTheKing(table, wn) {
+  var myCol = 1;
+  if (wn) myCol += 1; //myCol is 2 when white
+
+  for (var i = 0; i < 8; i += 1) {
+    for (var j = 0; j < 8; j += 1) {
+      if (table[i][j][1] === 9 && table[i][j][0] === myCol) {
+        //itt a kiraly
+        return [i, j];
+      }
+    }
+  }
+}
+
+function protectTable(table, myCol) {
+  return protectPieces(table, myCol) - protectPieces(table, !myCol);
+}
+
+function protectPieces(originalTable, whitePlayer) {
+  var myCol = 1;
+  if (whitePlayer) myCol = 2; //myCol is 2 when white
+  var protectedSum = 0;
+  getAllMoves(originalTable, whitePlayer, true)
+    . //moves include to hit my own 
+    //true stands for letMeHitMyOwn
+
+    forEach(function (thisMoveCoords) {
+      //we'll use the 2nd part of the moves [2][3]
+      if (originalTable[thisMoveCoords[2]][thisMoveCoords[3]][0] === myCol) { //if i have sg there
+        originalTable[thisMoveCoords[2]][thisMoveCoords[3]][6] = true; //that must be protected
+
+        if (originalTable[thisMoveCoords[0]][thisMoveCoords[1]][1] === 9) {
+          protectedSum += (9 - originalTable[thisMoveCoords[2]][thisMoveCoords[3]][1]) * 2; //king protects double
+
+        } else {
+
+          protectedSum += 9 - originalTable[thisMoveCoords[2]][thisMoveCoords[3]][1];
+        }
+
+      }
+    });
+  return protectedSum;
+}
+
+function getAllMoves(tableToMoveOn, whiteNext, hitItsOwn, allHitSum, removeCaptured) { //shouldn't always check hitsum
+  var origColor = whiteNext ? 2 : 1;
+  var thisArray = [];
+
+  if (hitItsOwn) {
+    whiteNext = !whiteNext;
+  }
+  var hitSumPart = [0];
+
+  for (var lookI = 0; lookI < 8; lookI += 1) { //
+    for (var lookJ = 0; lookJ < 8; lookJ += 1) { //look through the table
+      if (tableToMoveOn[lookI][lookJ][0] === origColor) { //ha sajat babum
+        canMove(lookI, lookJ, whiteNext, tableToMoveOn, !removeCaptured, true, hitSumPart) //true,true for speedy(sakkba is lep),dontProtect
+          .forEach(function (stepItem) {
+            thisArray[thisArray.length] = [lookI, lookJ, stepItem[0], stepItem[1]];
+          });
+      }
+    }
+  }
+  return thisArray;
+}
+function getTableData(origTable, isWhite, oppKingPos) { //, rtnSimpleValue) {
+
+  var lSancVal = 0;
+  var rSancVal = 0;
+
+  var tableValue = 0;
+
+  var rtnMyHitSum = [0]; //this pointer will be passed to canmove 
+  var rtnHisHitSum = [0];
+
+  var rtnMyBestHit = 0;
+  var rtnHisBestHit = 0;
+
+  var rtnHisMoveCount = 0;
+
+  var rtnPushHimBack = 0;
+
+  var rtnApproachTheKing = 0;
+
+  if (oppKingPos === undefined) oppKingPos = whereIsTheKing(origTable, !isWhite);
+
+  var origColor = 1;
+  if (isWhite) origColor = 2;
+
+  if (isWhite && origTable[4][0][3]) { //we play with white and have not moved the king yet
+
+    var sancolhat = false;
+
+    if (origTable[0][0][3]) {
+      lSancVal += 3; //unmoved rook worth more than moved
+      sancolhat = true;
+
+      if (origTable[3][0][0] === 0) lSancVal += 1; //trying to empty between
+      if (origTable[2][0][0] === 0) lSancVal += 3;
+      if (origTable[1][0][0] === 0) lSancVal += 1;
+
+      if (origTable[2][1][0] === 2) { //trying to keep my pieces  there to cover
+        lSancVal += 1;
+        if (origTable[2][1][1] === 1) lSancVal += 4;
+      }
+      if (origTable[1][1][0] === 2) { //trying to keep my pieces  there to cover
+        lSancVal += 1;
+        if (origTable[1][1][1] === 1) lSancVal += 4;
+      }
+      if (origTable[0][1][0] === 2) { //trying to keep my pieces  there to cover
+        lSancVal += 1;
+        if (origTable[0][1][1] === 1) lSancVal += 4;
+      }
+
+    }
+
+    if (origTable[7][0][3]) {
+      sancolhat = true;
+      rSancVal += 3;
+
+      if (origTable[6][0][0] === 0) rSancVal += 1;
+      if (origTable[5][0][0] === 0) rSancVal += 3;
+
+      if (origTable[7][1][0] === 2) { //trying to keep my pieces  there to cover
+        rSancVal += 1;
+        if (origTable[7][1][1] === 1) rSancVal += 4;
+      }
+      if (origTable[6][1][0] === 2) { //trying to keep my pieces  there to cover
+        rSancVal += 1;
+        if (origTable[6][1][1] === 1) rSancVal += 4;
+      }
+      if (origTable[5][1][0] === 2) { //trying to keep my pieces  there to cover
+        rSancVal += 1;
+        if (origTable[5][1][1] === 1) rSancVal += 4;
+      }
+
+    }
+
+    if (sancolhat) {
+      if (origTable[3][1][1] === 1 && origTable[3][1][0] === 2) lSancVal -= 6; //try to move d2 or e2 first
+      if (origTable[4][1][1] === 1 && origTable[4][1][0] === 2) rSancVal -= 6;
+
+      if (origTable[2][0][1] === 2 && origTable[2][0][0] === 2) lSancVal -= 6; //try to move out bishops
+      if (origTable[5][0][1] === 2 && origTable[5][0][0] === 2) rSancVal -= 6;
+    }
+
+  }
+
+  if (!isWhite && origTable[4][7][3]) { //we play with black and have not moved the king yet
+    sancolhat = false;
+
+    if (origTable[0][7][3]) {
+      sancolhat = true;
+      lSancVal += 3; //unmoved rook worth more than moved
+
+      if (origTable[3][7][0] === 0) lSancVal += 1;
+      if (origTable[2][7][0] === 0) lSancVal += 3;
+      if (origTable[1][7][0] === 0) lSancVal += 1;
+
+      if (origTable[2][6][0] === 1) { //trying to keep my pieces  there to cover
+        lSancVal += 1;
+        if (origTable[2][6][1] === 1) lSancVal += 4;
+      }
+      if (origTable[1][6][0] === 1) { //trying to keep my pieces  there to cover
+        lSancVal += 1;
+        if (origTable[1][6][1] === 1) lSancVal += 4;
+      }
+      if (origTable[0][6][0] === 1) { //trying to keep my pieces  there to cover
+        lSancVal += 1;
+        if (origTable[0][6][1] === 1) lSancVal += 4;
+      }
+    }
+
+    if (origTable[7][7][3]) {
+      sancolhat = true;
+      rSancVal += 3;
+
+      if (origTable[6][7][0] === 0) rSancVal += 1;
+      if (origTable[5][7][0] === 0) rSancVal += 3;
+
+      if (origTable[7][6][0] === 1) { //trying to keep my pieces  there to cover
+        rSancVal += 1;
+        if (origTable[7][6][1] === 1) rSancVal += 4;
+      }
+      if (origTable[6][6][0] === 1) { //trying to keep my pieces  there to cover
+        rSancVal += 1;
+        if (origTable[6][6][1] === 1) rSancVal += 4;
+      }
+      if (origTable[5][6][0] === 1) { //trying to keep my pieces  there to cover
+        rSancVal += 1;
+        if (origTable[5][6][1] === 1) rSancVal += 4;
+      }
+
+    }
+    //	
+    if (sancolhat) {
+      if (origTable[3][6][1] === 1 && origTable[3][6][0] === 1) lSancVal -= 4;
+      if (origTable[4][6][1] === 1 && origTable[4][6][0] === 1) rSancVal -= 4;
+
+      if (origTable[2][7][1] === 2 && origTable[2][7][0] === 1) lSancVal -= 4;
+      if (origTable[5][7][1] === 2 && origTable[5][7][0] === 1) rSancVal -= 4;
+
+    }
+
+  }
+  var myMostMoved = 0;
+
+  var getToMiddle = 0;
+  for (var lookI = 0; lookI < 8; lookI += 1) { //
+    for (var lookJ = 0; lookJ < 8; lookJ += 1) { //look through the table
+
+      if (origTable[lookI][lookJ][0] === origColor) { //ha sajat babum
+
+        //below:	minnel nagyobb erteku babum minnel kozelebb az ellenfel kiralyahoz
+
+        rtnApproachTheKing += ((7 - Math.abs(oppKingPos[0] - lookI)) + (7 - Math.abs(oppKingPos[1] - lookJ))) * origTable[lookI][lookJ][1];
+
+        canMove(lookI, lookJ, isWhite, origTable, true, true, rtnMyHitSum); //this can give back the moves, should use it
+        if (origTable[lookI][lookJ][2] > myMostMoved) myMostMoved = origTable[lookI][lookJ][2]; //get the highest number any piece moved
+
+        if (isWhite) {
+          rtnPushHimBack += lookJ;
+        } else {
+          rtnPushHimBack += 7 - lookJ;
+        }
+
+        tableValue += origTable[lookI][lookJ][1];
+
+      } else {
+
+        if (!(origTable[lookI][lookJ][0] === 0)) { //ha ellenfele
+
+          rtnHisMoveCount += (canMove(lookI, lookJ, !isWhite, origTable, true, true, rtnHisHitSum)
+            .length - 2);
+          if (!isWhite) {
+            rtnPushHimBack -= lookJ / 10;
+          } else {
+            rtnPushHimBack -= (7 - lookJ) / 10;
+          }
+          //or this tblevalue:
+          tableValue -= origTable[lookI][lookJ][1];
+        }
+      }
+    }
+  }
+
+  return [tableValue, rtnMyHitSum[0], rtnHisHitSum[0], // rtnHisMoveCount, 
+    lSancVal, rSancVal, getToMiddle, rtnPushHimBack, myMostMoved, rtnApproachTheKing
+  ];
+
+}
+
+
+
+
+
+
+
+
+
+
+
+// needed for client
 function canMove(k, l, isWhite, moveTable, speedy, dontProt, hitSumm = [0], dontRemoveInvalid, returnMoveCoords) { //, speedy) {
   var what = moveTable[k][l][1];
   var possibleMoves = [];
