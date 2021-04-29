@@ -461,7 +461,7 @@ export function coordsToMoveString(a, b, c, d) {
   return String.fromCharCode(97 + a) + (b + 1) + String.fromCharCode(97 + c) + (d + 1);
 }
 
-function pawnCanMoveN(k, l, moveTable, protectedArray/* null */, c, /*iHitMoves, /*protectScore, possibleMoves*/) {
+function pawnCanMoveN(k, l, moveTable, /*protectedArray null ,*/ c/*, iHitMoves, /*protectScore, possibleMoves*/) {
   if (c === 2) { //white pawn
     pushAidXN(k, l, k + 1, l + 1, c, moveTable, /* protectedArray, iHitMoves, /*protectScore, possibleMoves*/);
     pushAidXN(k, l, k - 1, l + 1, c, moveTable, /* protectedArray, iHitMoves, /*protectScore, possibleMoves*/);
@@ -471,7 +471,7 @@ function pawnCanMoveN(k, l, moveTable, protectedArray/* null */, c, /*iHitMoves,
   pushAidXN(k, l, k - 1, l - 1, c, moveTable, /* protectedArray, iHitMoves, /*protectScore, possibleMoves*/);
 }
 
-function rookCanMoveN(k, l, moveTable, protectedArray, c, iHitMoves, /*protectScore, possibleMoves*/) {
+function rookCanMoveN(k, l, moveTable, /*protectedArray, */c, /*iHitMoves, protectScore, possibleMoves*/) {
   var i = k + 1;
   while (pushAidNN(k, l, i, l, c, moveTable, /* protectedArray, iHitMoves, /*protectScore, possibleMoves*/)) i += 1;
   i = k - 1;
@@ -482,7 +482,7 @@ function rookCanMoveN(k, l, moveTable, protectedArray, c, iHitMoves, /*protectSc
   while (pushAidNN(k, l, k, i, c, moveTable, /* protectedArray, iHitMoves, /*protectScore, possibleMoves*/)) i -= 1;
 }
 
-function bishopCanMoveN(k, l, moveTable, protectedArray, c, iHitMoves, /*protectScore, possibleMoves*/) {
+function bishopCanMoveN(k, l, moveTable, /*protectedArray, */c, /*iHitMoves, protectScore, possibleMoves*/) {
   var i = k + 1;
   var j = l + 1;
   while (pushAidNN(k, l, i, j, c, moveTable, /* protectedArray, iHitMoves, /*protectScore, possibleMoves*/)) {
@@ -509,7 +509,7 @@ function bishopCanMoveN(k, l, moveTable, protectedArray, c, iHitMoves, /*protect
   }
 }
 
-function queenCanMoveN(k, l, moveTable, protectedArray, c, iHitMoves, /*protectScore, possibleMoves*/) {
+function queenCanMoveN(k, l, moveTable, /*protectedArray, */c, /*iHitMoves, protectScore, possibleMoves*/) {
   var i = k + 1;
   while (pushAidNN(k, l, i, l, c, moveTable, /* protectedArray, iHitMoves, /*protectScore, possibleMoves*/)) i += 1;
   i = k - 1;
@@ -544,7 +544,7 @@ function queenCanMoveN(k, l, moveTable, protectedArray, c, iHitMoves, /*protectS
   }
 }
 
-function kingCanMoveN(k, l, moveTable, protectedArray, c, iHitMoves, /*protectScore, possibleMoves*/) {
+function kingCanMoveN(k, l, moveTable, /*protectedArray, */c, /*iHitMoves, protectScore, possibleMoves*/) {
   pushAidN(k, l, k + 1, l, c, moveTable, /* protectedArray, iHitMoves, /*protectScore, possibleMoves*/);
   pushAidN(k, l, k - 1, l, c, moveTable, /* protectedArray, iHitMoves, /*protectScore, possibleMoves*/);
   pushAidN(k, l, k + 1, l + 1, c, moveTable, /* protectedArray, iHitMoves, /*protectScore, possibleMoves*/);
@@ -566,7 +566,7 @@ function kingCanMoveN(k, l, moveTable, protectedArray, c, iHitMoves, /*protectSc
   }
 }
 
-function horseCanMoveN(k, l, moveTable, protectedArray, c, iHitMoves, /*protectScore, possibleMoves*/) {
+function horseCanMoveN(k, l, moveTable, /*protectedArray, */c, /*iHitMoves, protectScore, possibleMoves*/) {
   pushAidN(k, l, k + 1, l + 2, c, moveTable, /* protectedArray, iHitMoves, /*protectScore, possibleMoves*/);
   pushAidN(k, l, k + 1, l - 2, c, moveTable, /* protectedArray, iHitMoves, /*protectScore, possibleMoves*/);
   pushAidN(k, l, k - 1, l + 2, c, moveTable, /* protectedArray, iHitMoves, /*protectScore, possibleMoves*/);
@@ -707,98 +707,42 @@ function fastMove(moveCoords, intable, dontProtect, hitValue) {
   return thistable;
 }
 
-function newCanMove(k, l, c, moveTable/*, protectedArray, iHitMoves, protectScore/*, possibleMoves*/) {
+function newCanMove(k, l, moveTable) {
   //[who k,l where to x,y who, hits]
+  const c = moveTable[k][l][0];
   var what = moveTable[k][l][1];
   switch (what) {
     case 1:
-      pawnCanMoveN(k, l, moveTable, null /*protectedArray*/, c,/* iHitMoves, protectScore/*, possibleMoves*/);
+      pawnCanMoveN(k, l, moveTable, /*null protectedArray,*/ c,/* iHitMoves, protectScore/*, possibleMoves*/);
       break;
     case 2:
-      bishopCanMoveN(k, l, moveTable, null /*protectedArray*/, c,/* iHitMoves, protectScore/*, possibleMoves*/);
+      bishopCanMoveN(k, l, moveTable, /*null protectedArray,*/ c,/* iHitMoves, protectScore/*, possibleMoves*/);
       break;
     case 3:
-      horseCanMoveN(k, l, moveTable, null /*protectedArray*/, c,/* iHitMoves, protectScore/*, possibleMoves*/);
+      horseCanMoveN(k, l, moveTable, /*null protectedArray,*/ c,/* iHitMoves, protectScore/*, possibleMoves*/);
       break;
     case 4:
-      rookCanMoveN(k, l, moveTable, null /*protectedArray*/, c,/* iHitMoves, protectScore/*, possibleMoves*/);
+      rookCanMoveN(k, l, moveTable, /*null protectedArray,*/ c,/* iHitMoves, protectScore/*, possibleMoves*/);
       break;
     case 5:
-      queenCanMoveN(k, l, moveTable, null /*protectedArray*/, c,/* iHitMoves, protectScore/*, possibleMoves*/);
+      queenCanMoveN(k, l, moveTable, /*null protectedArray,*/ c,/* iHitMoves, protectScore/*, possibleMoves*/);
       break;
     case 9:
-      kingCanMoveN(k, l, moveTable, null /*protectedArray*/, c,/* iHitMoves, protectScore/*, possibleMoves*/);
+      kingCanMoveN(k, l, moveTable, /*null protectedArray,*/ c,/* iHitMoves, protectScore/*, possibleMoves*/);
       break;
   }
 }
 
-export function getHitScores(origTable, wNext, flipIt, wPlayer) {
-  
-  // var iHitCoords = []; //[who k,l where to x,y, who, hits]
-  // var heHitsCoords = [];
-  // var myprotectScore = new Uint8Array(1); //[0]
-  // var hisprotectScore = new Uint8Array(1); //[0]
-  // var myAllHit = 0;
-  // var hisAllHit = 0;
-  
-  // var protectedArray = [ //new Array(8)
-  //   new Uint8Array(8),
-  //   new Uint8Array(8),
-  //   new Uint8Array(8),
-  //   new Uint8Array(8),
-  //   new Uint8Array(8),
-  //   new Uint8Array(8),
-  //   new Uint8Array(8),
-  //   new Uint8Array(8)
-  // ];
-  var c;
-  var nc;
-  if (wNext) {
-    nc = 1;
-    c = 2;
-  } else {
-    c = 1;
-    nc = 2;
-  }
-  // var allMyMoves = {};
-  // var hisKingMoves = {};
+export function getHitScores(origTable, wNext) {
+  const c = wNext ? 2 : 1;
 
   // write data on cells
   for (var lookI = 0; lookI < 8; lookI += 1) {
     for (var lookJ = 0; lookJ < 8; lookJ += 1) { //look through the table
-
-      if (origTable[lookI][lookJ][0] === c) {
-        ////////found my piece/////////
-        ////////get all my moves and places i protect
-        // if (origTable[lookI][lookJ][1] === 1) {
-        //   if (c === 1) {
-        //     pawnVal += (7 - lookJ);
-        //   } else {
-        //     pawnVal += lookJ;
-        //   }
-        // }
-
-        // throw new Error('savedya')
-
-        newCanMove(lookI, lookJ, c, origTable/*, protectedArray, iHitCoords, /*myprotectScore, allMyMoves*/); //newCanMove will protect the table
-        //and append all my hits to iHitCoords
-        //will increase myprotectscore, inaccurate!!!!!!!				
-      } else {
-        if (origTable[lookI][lookJ][0] !== 0) { ////////found opponent's piece/////////												
-          // if (origTable[lookI][lookJ][1] === 1) {
-          //   if (nc === 1) {
-          //     pawnVal -= (7 - lookJ);
-          //   } else {
-          //     pawnVal -= lookJ;
-          //   }
-          // }
-          newCanMove(lookI, lookJ, nc, origTable/*, protectedArray, heHitsCoords, hisprotectScore, origTable[lookI][lookJ][1] === 9 ? hisKingMoves : {}*/);
-        }
-      }
+      if (origTable[lookI][lookJ][0] === 0) continue; // empty cell
+      newCanMove(lookI, lookJ, origTable); //newCanMove will protect the table
     }
   }
-
-  // return [0]
 
   // process that data gathered above
   let totalValue = 0;
@@ -807,144 +751,101 @@ export function getHitScores(origTable, wNext, flipIt, wPlayer) {
     cellLoop:
     for (var lookJ = 0; lookJ < 8; lookJ += 1) { //look through the table
       if (origTable[lookI][lookJ][0] === 0 || !origTable[lookI][lookJ][2]) continue cellLoop; // empty cell or not attacked cell
-
-
-      if (origTable[lookI][lookJ][0] === c) {
-        ////////found my piece/////////
-        // let thisCellValue = 0;
-
-        // if (!origTable[lookI][lookJ][3]) { // cell has no protector
-        //   totalValue -= origTable[lookI][lookJ][1]; // this cell can be hit, deduct value and check next cell
-        //   continue cellLoop;
-        // }
-
-        // thisCellValue -= origTable[lookI][lookJ][1]; // deduct cell value, then it will add attacker's value
-        
-        // origTable[lookI][lookJ][2].sort((a, b) => b - a); // weakest attacker to the end;
-        // thisCellValue += origTable[lookI][lookJ][2].pop(); // add weakest attacker
-        
-        // if (origTable[lookI][lookJ][2].length === 0) { // no more attackers
-        //   if (thisCellValue < 0) totalValue += thisCellValue; // add negative cellvalue if worth to hit
-        //   continue cellLoop;
-        // };
-
-        // // there are more attackers, weakest protector will be hit
-        // origTable[lookI][lookJ][3].sort((a, b) => b - a); // weakest protector to the end;
-        // thisCellValue -= origTable[lookI][lookJ][3].pop(); // deduct weakest protector value
-
-        // while (true) {
-        //   if (origTable[lookI][lookJ][3].length === 0) { // no more protectors
-        //     if (thisCellValue < 0) totalValue += thisCellValue; // add negative cellvalue if worth to hit
-        //     continue cellLoop;
-        //   };
-  
-        //   // there are more protectors, 2nd weakest attacker will be hit too 
-        //   thisCellValue += origTable[lookI][lookJ][2].pop();
-  
-        //   if (origTable[lookI][lookJ][2].length === 0) { // no more attackers
-        //     if (thisCellValue < 0) totalValue += thisCellValue;
-        //     continue cellLoop;
-        //   };
-  
-        //   thisCellValue -= origTable[lookI][lookJ][3].pop(); // deduct 2nd weakest protector value
-        // }	
-      } else {
+      
+      if (origTable[lookI][lookJ][0] !== c) {
         // opponent's piece
         let thisCellValue = 0;
+        let weakestProtector;
+        let weakestAttacker;
+        let hasMoreAttackers;
+        let hasMoreProtectors;
 
         if (!origTable[lookI][lookJ][3]) { // cell has no protector
           totalValue += origTable[lookI][lookJ][1]; // this cell can be hit, add value and check next cell
           continue cellLoop;
         }
+        // cell has protector
 
-        thisCellValue += origTable[lookI][lookJ][1]; // add cell value, then it will deduct attacker's value
-        
+        thisCellValue += origTable[lookI][lookJ][1]; // add cell value
+
         origTable[lookI][lookJ][2].sort((a, b) => b - a); // weakest attacker to the end;
-        thisCellValue -= origTable[lookI][lookJ][2].pop(); // deduct weakest attacker
+        weakestAttacker = origTable[lookI][lookJ][2].pop();
+
+        origTable[lookI][lookJ][3].sort((a, b) => b - a); // weakest protector to the end;
+        weakestProtector = origTable[lookI][lookJ][3].pop();
+
+        hasMoreAttackers = origTable[lookI][lookJ][2].length !== 0;
+        if (
+          hasMoreAttackers &&
+          weakestAttacker < weakestProtector // the protector worth more than the 1st attacker used
+        ) {
+          // break here, protector will not be used, doesn't worth it
+          totalValue += thisCellValue;
+          continue cellLoop;
+        }
+        // weakest attacker will be hit
         
-        if (origTable[lookI][lookJ][2].length === 0) { // no more attackers
+        thisCellValue -= weakestAttacker; // deduct weakest attacker
+        
+        if (!hasMoreAttackers) { // no more attackers
           if (thisCellValue > 0) totalValue += thisCellValue; // add cellvalue if worth to hit
           continue cellLoop;
         };
+        // there are more attackers
 
-        // there are more attackers, weakest protector will be hit
-        origTable[lookI][lookJ][3].sort((a, b) => b - a); // weakest protector to the end;
-        thisCellValue += origTable[lookI][lookJ][3].pop(); // add weakest protector value
-
+        weakestAttacker = origTable[lookI][lookJ][2].pop(); // second weakest
+        hasMoreProtectors = origTable[lookI][lookJ][3].length !== 0;
         while (true) {
-          if (origTable[lookI][lookJ][3].length === 0) { // no more protectors
+          if (
+            hasMoreProtectors &&
+            weakestProtector < weakestAttacker
+          ) {
+            // break here, attacker will not be used, doesn't worth it
+            if (thisCellValue > 0) totalValue += thisCellValue; // add cellvalue if worth to hit
+            continue cellLoop;
+          }
+          // weakest protector will be hit
+      
+          thisCellValue += weakestProtector; // add weakest protector value
+
+          // while (true) {
+          if (!hasMoreProtectors) { // no more protectors
             if (thisCellValue > 0) totalValue += thisCellValue; // add cellvalue if worth to hit
             continue cellLoop;
           };
+          // there are more protectors
+
+          weakestProtector = origTable[lookI][lookJ][3].pop();
+          hasMoreAttackers = origTable[lookI][lookJ][2].length !== 0;
+
+          if (
+            hasMoreAttackers &&
+            weakestAttacker < weakestProtector
+          ) {
+            // break here, attacker will not be used, doesn't worth it
+            if (thisCellValue > 0) totalValue += thisCellValue; // add cellvalue if worth to hit
+            continue cellLoop;
+          }
+          // weakest attacker will be hit
+
+          thisCellValue -= weakestAttacker;
   
-          // there are more protectors, 2nd weakest attacker will be hit too 
-          thisCellValue -= origTable[lookI][lookJ][2].pop();
-  
-          if (origTable[lookI][lookJ][2].length === 0) { // no more attackers
+          if (!hasMoreAttackers) { // no more attackers
             if (thisCellValue > 0) totalValue += thisCellValue;
             continue cellLoop;
           };
-  
-          thisCellValue += origTable[lookI][lookJ][3].pop(); // add 2nd weakest protector value
+          // there are more attackers
+
+          weakestAttacker = origTable[lookI][lookJ][2].pop();
+          hasMoreProtectors = origTable[lookI][lookJ][3].length !== 0;
         }
       }
     }
   }
 
+  return totalValue * 100;
+};
 
-
-  // iHitCoords.forEach(function (hitCoords) {
-  //   var thisValue = 0;
-  //   if (protectedArray[hitCoords[2]][hitCoords[3]]) { //if field is protected
-
-  //     thisValue = hitCoords[5] - hitCoords[4]; //kivonja amivel lep
-
-  //   } else {
-  //     thisValue = hitCoords[5]; //else normal hitvalue
-
-  //   }
-  //   // if (thisValue > myBestHit) { //remember best
-
-  //   //   myBestHit = thisValue;
-  //   //   myBestHitCoords = hitCoords;
-  //   // }
-  //   myAllHit += thisValue;
-  // });
-  // heHitsCoords.forEach(function (hitCoords) {
-  //   var thisValue = 0;
-  //   if (protectedArray[hitCoords[2]][hitCoords[3]]) { //if cell is protected
-
-  //     thisValue = hitCoords[5] - hitCoords[4]; //kivonja amivel lep
-
-  //   } else {
-  //     thisValue = hitCoords[5]; //normal hitvalue
-
-  //   }
-  //   // if (thisValue > hisBestHit) { //remember best
-
-  //   //   hisBestHit = thisValue;
-  //   //   //
-  //   // }
-  //   hisAllHit += thisValue;
-  // });
-  // var protecScore = myprotectScore[0] - hisprotectScore[0];
-  // var allhitScore = myAllHit - hisAllHit;
-  // // var hisKingMArr = Object.keys(hisKingMoves);
-  // // var hisKingMoveScore = 8 - (hisKingMArr.length);
-  // // var blockHisKingScore = hisKingMArr.reduce((p, c) => allMyMoves[c] ? p + 1 : p, 0);
-  // // pawnVal *= fwV * fwVdef;
-  // // hisKingMoveScore *= hKM * hKMdef;
-  // // blockHisKingScore *= bHK * bHKdef;
-  // var result = new Int32Array(1);
-  // result[0] = 0//(myBestHit * 65536) - (hisBestHit * 4096);
-  // if (flipIt) {
-  //   result[0] -= (allhitScore) /* + (pawnVal) + (hisKingMoveScore << 9) + (blockHisKingScore << 10)*/ ; //1633333
-  // } else {
-  //   result[0] += (allhitScore) /* + (pawnVal) + (hisKingMoveScore << 9) + (blockHisKingScore << 10)*/; //1633333
-  // }
-
-  return [totalValue];
-}
 
 function solveSmallDeepeningTask(sdt, resolverArray) {
   //gets one task, produces an array of more tasks
@@ -986,24 +887,10 @@ function solveSmallDeepeningTask(sdt, resolverArray) {
       if (sdt.depth === sdt.desiredDepth) {
         //////depth reached, eval table
 
-        var newScore;// = new Int32Array(1)
-        if (isNegative) {
-          newScore = sdt.score - getHitScores(sdt.table,
-            sdt.wNext, false, sdt.wPlayer,
-            sdt.mod, sdt.shouldIDraw)[0]
-        } else {
-
-          newScore = sdt.score + getHitScores(sdt.table,
-            sdt.wNext, true, sdt.wPlayer,
-            sdt.mod, sdt.shouldIDraw)[0]
-
-          // if (g < -37) console.log({s:sdt.score, g, m: sdt.moveTree })
-
-            // if (typeof sdt.score !== 'number') throw new Error('sdt.score is not number')
-            // if (typeof g !== 'number') throw new Error('g is not number')
-
-          //g
-        }
+        const newScore = isNegative
+          ? sdt.score - getHitScores(sdt.table, sdt.wNext)
+          : sdt.score + getHitScores(sdt.table, sdt.wNext);
+        
         result[result.length] = new SmallDeepeningTask(
           [], //no table
           newWNext,
@@ -1036,7 +923,7 @@ function solveSmallDeepeningTask(sdt, resolverArray) {
 
 
           var whatGetsHit = sdt.table[moveCoords[2]][moveCoords[3]];
-          var thisValue = whatGetsHit[1] //piece value, should += 1 when en-pass
+          var thisValue = whatGetsHit[1] * 100 //piece value, should += 1 when en-pass
 
           var valueToSave
 
@@ -1217,19 +1104,20 @@ export const DeepeningTask = function (smallMoveTask) { //keep this fast, design
   this.initialWNext = smallMoveTask.sharedData.origWNext
 
 
-  this.moveStr = [
-    smallMoveTask.moveCoords[0],
-    smallMoveTask.moveCoords[1],
-    smallMoveTask.moveCoords[2],
-    smallMoveTask.moveCoords[3]
-  ]            //smallMoveTask.stepMove //all resulting tables relate to this movestring: deppeningtask is made of smallmovetask..
+  this.moveStr = smallMoveTask.moveCoords;
+  // [
+  //   smallMoveTask.moveCoords[0],
+  //   smallMoveTask.moveCoords[1],
+  //   smallMoveTask.moveCoords[2],
+  //   smallMoveTask.moveCoords[3]
+  // ]            //smallMoveTask.stepMove //all resulting tables relate to this movestring: deppeningtask is made of smallmovetask..
   this.initialTreeMoves = [this.moveStr] //to put in first smallmovetask
 
   this.startingTable = smallMoveTask.sharedData.origTable //this was calculated in advance when getting the first moves: that resulted in this.everything
   this.startingAllPastTables = smallMoveTask.sharedData.allPast
   this.thisTaskTable = moveIt(this.moveStr, this.startingTable, true) //this is the first and should be only time calculating this!!!!!
   //takes time
-  this.firstDepthValue = this.startingTable[smallMoveTask.moveCoords[2]][smallMoveTask.moveCoords[3]][1]              //smallMoveTask.firstDepthValue
+  this.firstDepthValue = this.startingTable[smallMoveTask.moveCoords[2]][smallMoveTask.moveCoords[3]][1]     *100         //smallMoveTask.firstDepthValue
 
   this.desiredDepth = smallMoveTask.sharedData.desiredDepth //we will deepen until depth reaches this number
 
