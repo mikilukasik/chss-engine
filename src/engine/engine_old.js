@@ -1702,7 +1702,7 @@ function solveSmallDeepeningTask(sdt, resolverArray) {
 
           var whatGetsHit = sdt.table[moveCoords[2]][moveCoords[3]];
 
-          var thisValue = whatGetsHit[1] //piece value, should += 1 when en-pass
+          var thisValue = whatGetsHit[1] * 100//piece value, should += 1 when en-pass
 
           var valueToSave
 
@@ -1811,7 +1811,7 @@ export function solveDeepeningTask(deepeningTask, isSdt) { //designed to solve t
   }
 
   if (isSdt !== true) {
-    ret.score = resolverArray[1][0].value
+    ret.score = resolverArray[1][0].value * 100
 
   }
 
