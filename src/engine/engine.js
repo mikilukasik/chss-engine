@@ -1,9 +1,11 @@
 // needed for service
-var MoveToSend = function (moveCoord, index, dbTableWithMoveTask, splitMoveId) {
+var MoveToSend = function (moveCoord, index, dbTableWithMoveTask, splitMoveId, firstLevelMoveCount) {
 
   var moveTask = dbTableWithMoveTask.moveTask
 
   this.shouldIDraw = moveTask.shouldIDraw
+
+  this.firstLevelMoveCount = firstLevelMoveCount
 
   this.mod = moveTask.mod
 
@@ -41,9 +43,10 @@ export const SplitMove = function (dbTableWithMoveTask) {
 
   var movesToSend = []
 
+  const firstLevelMoveCount = dbTableWithMoveTask.moveTask.moveCoords.length;
   dbTableWithMoveTask.moveTask.moveCoords.forEach((moveCoord, index) => {
 
-    movesToSend.push(new MoveToSend(moveCoord, index, dbTableWithMoveTask, this.splitMoveID))
+    movesToSend.push(new MoveToSend(moveCoord, index, dbTableWithMoveTask, this.splitMoveID, firstLevelMoveCount))
 
   })
 
